@@ -18,7 +18,7 @@ NAME = "Stock Anatomy"
 DESC = "Korean stocks, part by part. We take products apart and find the listed Korean companies that make each component."
 GA = "G-9Z2Z1F6EN5"
 KST = timezone(timedelta(hours=9))
-NAV = ["Market Close", "Korea Brief", "Teardown", "Congress Trades", "Semiconductors", "Robotics", "Defense"]
+NAV = ["Market Close", "Korea Brief", "Teardown", "Congress Trades"]
 esc = html.escape
 slug = lambda s: re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
@@ -51,7 +51,8 @@ def page(title, body, path, desc=DESC, image="", og_type="website", extra_head="
     canon = SITE + BASE + path
     full = title if title == NAME else f"{title} | {NAME}"
     nav = "".join(f'<a href="{BASE}/label/{slug(l)}.html">{esc(l)}</a>' for l in NAV)
-    og_img = f'<meta property="og:image" content="{image}">' if image else ""
+    image = image or f"{SITE}{BASE}/assets/og.jpg"
+    og_img = f'<meta property="og:image" content="{image}">'
     return f"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -64,11 +65,12 @@ def page(title, body, path, desc=DESC, image="", og_type="website", extra_head="
 <meta property="og:url" content="{canon}">{og_img}
 <meta name="twitter:card" content="summary_large_image">
 <link rel="alternate" type="application/rss+xml" title="{NAME}" href="{BASE}/feed.xml">
+<link rel="icon" type="image/png" sizes="48x48" href="{BASE}/assets/favicon-48.png"><link rel="apple-touch-icon" href="{BASE}/assets/apple-touch-icon.png">
 <link rel="stylesheet" href="{BASE}/style.css">
 <script async src="https://www.googletagmanager.com/gtag/js?id={GA}"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments)}}gtag('js',new Date());gtag('config','{GA}');</script>
 {extra_head}</head><body>
-<header class="hd"><div class="wrap"><a class="logo" href="{BASE}/">{NAME}</a><nav>{nav}</nav></div></header>
+<header class="hd"><div class="wrap"><a class="logo" href="{BASE}/"><img src="{BASE}/assets/logo-art-96.png" alt="" height="38">{NAME}</a><nav>{nav}</nav></div></header>
 {body}
 <footer class="ft"><div class="wrap"><div class="links"><a href="{BASE}/p/about.html">About</a><a href="{BASE}/p/disclaimer.html">Disclaimer</a><a href="{BASE}/archive.html">All posts</a><a href="{BASE}/feed.xml">RSS</a></div>
 <small>{esc(DESC)} Not investment advice.</small><small>© {NAME}</small></div></footer>
@@ -93,6 +95,7 @@ def build():
         shutil.rmtree(OUT)
     OUT.mkdir()
     shutil.copy(HERE / "style.css", OUT / "style.css")
+    shutil.copytree(HERE / "assets", OUT / "assets")
     posts = load_posts()
     grid = lambda ps: f'<div class="grid">{"".join(card(p) for p in ps)}</div>'
 
@@ -110,7 +113,7 @@ def build():
         write(p["path"], page(p["title"], body, p["path"], p["summary"], p["img"], "article",
                               f'<script type="application/ld+json">{ld}</script>\n'))
 
-    home = (f'<section class="hero"><div class="wrap"><h1>{NAME}</h1><p>{esc(DESC)}</p></div></section>'
+    home = (f'<section class="hero"><div class="wrap"><p class="kick">Daily Korea market close · Component teardowns</p><h1>Korean stocks,<br>part by part.</h1><p>We take products apart and find the listed Korean companies that make each component, and close every trading day with a short Korea market recap.</p><p class="cta"><a href="{BASE}/label/market-close.html">Latest market close →</a><a href="{BASE}/label/teardown.html">Teardowns →</a></p><img class="art" src="{BASE}/assets/logo-art-600.png" alt="A phone taken apart, with the chip inside highlighted" width="271" height="300"></div></section>'
             f'<main class="wrap"><h2 class="sec">Latest</h2>{grid(posts[:30])}'
             f'<p class="more"><a href="{BASE}/archive.html">All {len(posts)} posts →</a></p></main>')
     write("/index.html", page(NAME, home, "/"))
