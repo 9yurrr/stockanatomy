@@ -23,5 +23,6 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+      - run: sleep 30  # artifact listing lags the upload; deploy-pages failed with 'No artifacts named github-pages'
       - id: d
         uses: actions/deploy-pages@v5
